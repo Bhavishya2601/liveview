@@ -4,7 +4,10 @@ import CodeModel from '@/models/Code';
 
 export default async function PreviewPage({ params }: { params: { id: string } }) {
   await connectToDatabase();
-  const code = await CodeModel.findById(params.id).lean();
+
+  const resolvedParams = await params;
+  const id = resolvedParams?.id;
+  const code = await CodeModel.findById(id).lean();
 
   if (!code) {
     return React.createElement('div', null, 'Code not found');
