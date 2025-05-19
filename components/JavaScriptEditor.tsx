@@ -15,7 +15,7 @@ const JavaScriptEditor: React.FC<JavaScriptEditorProps> = ({ value, onChange }) 
   return (
     <div className="h-full bg-black overflow-auto custom-scrollbar px-2">
       <div className="flex gap-2 items-center p-2 text-gray-300">
-        <Image src="images/javascript.svg" alt="JavaScript" width={20} height={20} />
+        <Image src="../images/javascript.svg" alt="JavaScript" width={20} height={20} />
         <div className="font-semibold text-lg">JS</div>
       </div>
       <CodeMirror
