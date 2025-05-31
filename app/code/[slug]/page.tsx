@@ -39,7 +39,7 @@ export default function Home() {
           setJsCode(data.jsCode)
         })
     }
-  }, [])
+  }, [user?.id, slug])
 
   return (
     <div>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import Image from "next/image"
 import { Button } from "@/components/ui/Button"
 import { SignedIn, UserButton, useUser } from "@clerk/nextjs"
@@ -25,15 +25,18 @@ export default function Home() {
     cssCode: '',
     jsCode: ''
   })
-  const [isloading, setIsLoading] = useState(false)
+  const [loadingProjects, setLoadingProjects] = useState(true)
+  const [fetched, setFetched] = useState(false)
   type Project = {
     _id: string
     name: string
     slug: string
   }
   const [projects, setProjects] = useState<Project[]>([])
+  const [dialogOpen, setDialogOpen] = useState(false)
 
-  useEffect(() => {
+  const fetchProjects = useCallback(() => {
+    setLoadingProjects(true)
     if (user?.id) {
       fetch("/api/projects", {
         method: "POST",
@@ -50,12 +53,16 @@ export default function Home() {
             throw new Error("Failed to fetch projects")
           }
           setProjects(data)
-        })
-    }
+        }).finally(()=>setFetched(true))
+    } 
+    setLoadingProjects(false)
   }, [user?.id])
 
+  useEffect(() => {
+    fetchProjects()
+  }, [fetchProjects])
+
   const handleCreate = async () => {
-    setIsLoading(true);
     try {
       const res = await fetch("/api/newProject", {
         method: "POST",
@@ -82,10 +89,11 @@ export default function Home() {
         cssCode: '',
         jsCode: ''
       })
+      fetchProjects();
     } catch (err) {
       console.log(err)
     } finally {
-      setIsLoading(false);
+      setDialogOpen(false);
     }
   }
 
@@ -97,7 +105,7 @@ export default function Home() {
           <div className="text-2xl tracking-wide font-semibold">LiveView</div>
         </div>
         <div className="flex items-center gap-4">
-          <Dialog>
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
               <Button className='cursor-pointer bg-[#b719d3] hover:bg-[#c81ae6]'>
                 <Plus />
@@ -139,29 +147,42 @@ export default function Home() {
       <div className="flex gap-3 items-center text-3xl px-10 py-4 font-semibold">Your Sites </div>
 
       <div className="grid grid-cols-3 gap-3 p-4 px-10">
-        {projects.map((project) => (
-          <div key={project._id} className="flex flex-col gap-4 bg-white p-4 rounded-lg shadow-md">
-            <div className="flex justify-between items-center">
-              <div className="text-xl font-semibold">{project.name}</div>
-              <a href={`/preview/${project.slug}`} target="_blank" rel="noopener noreferrer">
-                <ExternalLink className="hover:bg-gray-100 p-1 rounded-md cursor-pointer" size={28} />
-              </a>
+        {loadingProjects ? (
+          Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="animate-pulse flex flex-col gap-4 bg-white p-4 rounded-lg shadow-md h-40">
+              <div className="h-6 bg-gray-300 rounded w-1/2 mb-2"></div>
+              <div className="h-8 bg-gray-300 rounded w-full mb-2"></div>
+              <div className="h-4 bg-gray-300 rounded w-1/3"></div>
             </div>
-            <div className="bg-gray-200 rounded-md p-2 flex justify-between items-center">
-              <div>{`https://livevview.vercel.app/preview/${project.slug}`}</div>
-              <Copy
-                className="cursor-pointer"
-                size={18}
-                onClick={() => navigator.clipboard.writeText(`https://livevview.vercel.app/preview/${project.slug}`)}
-              />            </div>
-            <div className="flex justify-between items-center">
-              <a href={`/code/${project.slug}`} target="_blank">
-              <Button className="flex gap-2 items-center cursor-pointer" variant="outline">Edit <SquarePen /></Button>
-              </a>
-              <Button className="flex gap-2 items-center text-white cursor-pointer" variant="destructive">Delete <Trash /></Button>
-            </div>
+          ))
+        ) : ( fetched && projects.length === 0 ? (
+          <div className="col-span-3 text-center text-2xl mt-10 text-gray-500">
+            No projects found. Create a new project to get started!
           </div>
-        ))}
+        ) : (
+          projects.map((project) => (
+            <div key={project._id} className="flex flex-col gap-4 bg-white p-4 rounded-lg shadow-md">
+              <div className="flex justify-between items-center">
+                <div className="text-xl font-semibold">{project.name}</div>
+                <a href={`/preview/${project.slug}`} target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="hover:bg-gray-100 p-1 rounded-md cursor-pointer" size={28} />
+                </a>
+              </div>
+              <div className="bg-gray-200 rounded-md p-2 flex justify-between items-center">
+                <div>{`https://livevview.vercel.app/preview/${project.slug}`}</div>
+                <Copy
+                  className="cursor-pointer"
+                  size={18}
+                  onClick={() => navigator.clipboard.writeText(`https://livevview.vercel.app/preview/${project.slug}`)}
+                />            </div>
+              <div className="flex justify-between items-center">
+                <a href={`/code/${project.slug}`} target="_blank">
+                  <Button className="flex gap-2 items-center cursor-pointer" variant="outline">Edit <SquarePen /></Button>
+                </a>
+                <Button className="flex gap-2 items-center text-white cursor-pointer" variant="destructive">Delete <Trash /></Button>
+              </div>
+            </div>
+          ))))}
       </div>
     </div>
   )

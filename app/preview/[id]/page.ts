@@ -2,11 +2,10 @@ import React from 'react';
 import connectToDatabase from '@/lib/mongodb';
 import CodeModel from '@/models/Code';
 
-export default async function PreviewPage({ params }: { params: { id: string } }) {
+export default async function PreviewPage({ params }: { params: Promise<{id: string}> }) {
   await connectToDatabase();
 
-  const resolvedParams = await params;
-  const id = resolvedParams?.id;
+  const {id} = await params;
   const code = await CodeModel.findById(id).lean();
 
   if (!code) {
