@@ -19,4 +19,18 @@ async function connectToDatabase() {
   }
 }
 
+const codeSchema = new mongoose.Schema({
+  html: { type: String, default: '' },
+  css: { type: String, default: '' },
+  js: { type: String, default: '' },
+  slug: { type: String, unique: true, required: true },
+  name: { type: String, required: true },
+  userId: { type: String, required: true },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
+});
+
+export const CodeModel = mongoose.models.Code || mongoose.model('Code', codeSchema);
+
+
 export default connectToDatabase;

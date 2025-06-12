@@ -1,6 +1,6 @@
 import React from 'react';
 import connectToDatabase from '@/lib/mongodb';
-import CodeModel from '@/models/Code';
+import { CodeModel } from '@/lib/mongodb';
 
 export default async function PreviewPage({ params }: { params: Promise<{id: string}> }) {
   await connectToDatabase();
@@ -8,7 +8,7 @@ export default async function PreviewPage({ params }: { params: Promise<{id: str
   const {id} = await params;
   const code = await CodeModel.findById(id).lean();
 
-  if (!code) {
+  if (!code || Array.isArray(code)) {
     return React.createElement('div', null, 'Code not found');
   }
 

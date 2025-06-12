@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react"
 import Image from "next/image"
 import { Button } from "@/components/ui/Button"
 import { SignedIn, UserButton, useUser } from "@clerk/nextjs"
+import { createNewProject } from "@/lib/actions"
 import { Plus, ExternalLink, SquarePen, Trash, Copy } from "lucide-react"
 import {
   Dialog,
@@ -26,7 +27,6 @@ export default function Home() {
     jsCode: ''
   })
   const [loadingProjects, setLoadingProjects] = useState(true)
-  const [fetched, setFetched] = useState(false)
   type Project = {
     _id: string
     name: string
@@ -53,9 +53,12 @@ export default function Home() {
             throw new Error("Failed to fetch projects")
           }
           setProjects(data)
-        }).finally(()=>setFetched(true))
-    } 
-    setLoadingProjects(false)
+        }).finally(()=>{
+          setLoadingProjects(false)
+        })
+    } else {
+      setLoadingProjects(false)
+    }
   }, [user?.id])
 
   useEffect(() => {
@@ -155,11 +158,7 @@ export default function Home() {
               <div className="h-4 bg-gray-300 rounded w-1/3"></div>
             </div>
           ))
-        ) : ( fetched && projects.length === 0 ? (
-          <div className="col-span-3 text-center text-2xl mt-10 text-gray-500">
-            No projects found. Create a new project to get started!
-          </div>
-        ) : (
+        ) : ( projects.length !== 0 ? (
           projects.map((project) => (
             <div key={project._id} className="flex flex-col gap-4 bg-white p-4 rounded-lg shadow-md">
               <div className="flex justify-between items-center">
@@ -182,7 +181,11 @@ export default function Home() {
                 <Button className="flex gap-2 items-center text-white cursor-pointer" variant="destructive">Delete <Trash /></Button>
               </div>
             </div>
-          ))))}
+          ))) : (
+          <div className="col-span-3 text-center text-2xl mt-10 text-gray-500">
+            No projects found. Create a new project to get started!
+          </div>
+        ))}
       </div>
     </div>
   )
