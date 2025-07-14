@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react"
 import Image from "next/image"
 import { Button } from "@/components/ui/Button"
 import { SignedIn, UserButton, useUser } from "@clerk/nextjs"
-import { createNewProject } from "@/lib/actions"
+// import { createNewProject } from "@/lib/actions"
 import { Plus, ExternalLink, SquarePen, Trash, Copy } from "lucide-react"
 import {
   Dialog,
