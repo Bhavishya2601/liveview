@@ -6,7 +6,7 @@ export default async function PreviewPage({ params }: { params: Promise<{id: str
   await connectToDatabase();
 
   const {id} = await params;
-  const code = await CodeModel.findById(id).lean();
+  const code = await CodeModel.findOne({ slug: id }).lean();
 
   if (!code || Array.isArray(code)) {
     return React.createElement('div', null, 'Code not found');

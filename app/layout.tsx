@@ -4,6 +4,8 @@ import './globals.css';
 import { Analytics } from '@vercel/analytics/react';
 import { ClerkProvider } from '@clerk/nextjs';
 import { Toaster } from 'react-hot-toast';
+import { LoadingProvider } from '@/contexts/LoadingContext';
+import GlobalLoader from '@/components/GlobalLoader';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -30,9 +32,12 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en">
         <body className={`${geistSans.variable} ${geistMono.variable} antialiased select-none`}>
-          {children}
-          <Toaster />
-          <Analytics />
+          <LoadingProvider>
+            {children}
+            <GlobalLoader />
+            <Toaster />
+            <Analytics />
+          </LoadingProvider>
         </body>
       </html>
     </ClerkProvider>

@@ -3,6 +3,7 @@ import { Button } from './ui/Button';
 import { ExternalLink, Save } from 'lucide-react';
 import Image from 'next/image';
 import toast from 'react-hot-toast';
+import { useLoading } from '@/contexts/LoadingContext';
 
 interface HeaderProps {
   htmlCode: string;
@@ -13,9 +14,12 @@ interface HeaderProps {
 }
 
 export default function Header({ htmlCode, cssCode, jsCode, slug, projectId }: HeaderProps) {
+  const { setLoading } = useLoading();
 
   const saveProject = async () => {
     try {
+      setLoading(true);
+      
       const res = await fetch('/api/projects/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -28,8 +32,10 @@ export default function Header({ htmlCode, cssCode, jsCode, slug, projectId }: H
       } else {
         toast.error(data.error || 'Failed to save project');
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to save project');
+    } finally {
+      setLoading(false);
     }
   };
 

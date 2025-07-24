@@ -4,8 +4,7 @@ import { useState, useEffect, useCallback } from "react"
 import Image from "next/image"
 import { Button } from "@/components/ui/Button"
 import { SignedIn, UserButton, useUser } from "@clerk/nextjs"
-// import { createNewProject } from "@/lib/actions"
-import { Plus, ExternalLink, SquarePen, Trash, Copy } from "lucide-react"
+import { Plus, ExternalLink, SquarePen, Trash, Copy, Check, X } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -17,9 +16,11 @@ import {
 } from "@/components/ui/Dialog"
 import { Input } from "@/components/ui/Input"
 import toast from 'react-hot-toast'
+import { useLoading } from '@/contexts/LoadingContext'
 
 export default function Home() {
   const { user } = useUser()
+  const { setLoading } = useLoading()
   const [newProject, setNewProject] = useState({
     projectName: '',
     projectSlug: '',
@@ -28,6 +29,7 @@ export default function Home() {
     jsCode: ''
   })
   const [loadingProjects, setLoadingProjects] = useState(true)
+  const [slugStatus, setSlugStatus] = useState<'checking' | 'available' | 'taken' | null>(null)
   type Project = {
     _id: string
     name: string
@@ -35,6 +37,7 @@ export default function Home() {
   }
   const [projects, setProjects] = useState<Project[]>([])
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [deletingProjectId, setDeletingProjectId] = useState<string | null>(null)
 
   const fetchProjects = useCallback(() => {
     setLoadingProjects(true)
@@ -55,7 +58,7 @@ export default function Home() {
           }
           setProjects(data)
         })
-        .catch(error => {
+        .catch(() => {
           toast.error("Failed to fetch projects")
         })
         .finally(()=>{
@@ -70,8 +73,59 @@ export default function Home() {
     fetchProjects()
   }, [fetchProjects])
 
-  const handleCreate = async () => {
+  const checkSlugAvailability = useCallback(async (slug: string) => {
+    if (!slug || !user?.id) {
+      setSlugStatus(null);
+      return;
+    }
+
+    setSlugStatus('checking');
+    
     try {
+      const res = await fetch('/api/checkSlug', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slug })
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setSlugStatus(data.available ? 'available' : 'taken');
+      } else {
+        setSlugStatus(null);
+      }
+    } catch {
+      setSlugStatus(null);
+    }
+  }, [user?.id]);
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      checkSlugAvailability(newProject.projectSlug);
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [newProject.projectSlug, checkSlugAvailability]);
+
+  const handleCreate = async () => {
+    if (!newProject.projectName || !newProject.projectSlug) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
+    if (slugStatus === 'taken') {
+      toast.error("Please choose a different slug - this one is already taken");
+      return;
+    }
+
+    if (slugStatus === 'checking') {
+      toast.error("Please wait while we check slug availability");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      
       const res = await fetch("/api/newProject", {
         method: "POST",
         headers: {
@@ -101,16 +155,21 @@ export default function Home() {
         cssCode: '',
         jsCode: ''
       })
+      setSlugStatus(null);
       fetchProjects();
-    } catch (err) {
+    } catch {
       toast.error("Failed to create project");
     } finally {
+      setLoading(false);
       setDialogOpen(false);
     }
   }
 
   const handleDelete = async (projectId: string) => {
     try {
+      setDeletingProjectId(projectId);
+      setLoading(true);
+      
       const res = await fetch("/api/projects/delete", {
         method: "POST",
         headers: {
@@ -127,10 +186,18 @@ export default function Home() {
 
       toast.success("Project deleted successfully!");
       fetchProjects();
-    } catch (err) {
+    } catch {
       toast.error("Failed to delete project");
+    } finally {
+      setLoading(false);
+      setDeletingProjectId(null);
     }
   }
+
+  const openPreview = (projectSlug: string) => {
+    const previewLink = `/preview/${projectSlug}`;
+    window.open(previewLink, '_blank');
+  };
 
   return (
     <div className="bg-[#F8FAFC] min-h-screen">
@@ -160,12 +227,35 @@ export default function Home() {
                 className="border p-2 rounded w-full"
                 value={newProject.projectName}
                 onChange={e => setNewProject({ ...newProject, projectName: e.target.value })} />
-              <Input
-                type="text"
-                placeholder="Project Slug"
-                className="border p-2 rounded w-full"
-                value={newProject.projectSlug}
-                onChange={e => setNewProject({ ...newProject, projectSlug: e.target.value })} />
+              <div className="relative">
+                <Input
+                  type="text"
+                  placeholder="Project Slug"
+                  className={`border p-2 rounded w-full pr-10 ${
+                    slugStatus === 'available' ? 'border-green-500' : 
+                    slugStatus === 'taken' ? 'border-red-500' : 
+                    'border-gray-300'
+                  }`}
+                  value={newProject.projectSlug}
+                  onChange={e => setNewProject({ ...newProject, projectSlug: e.target.value })} />
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                  {slugStatus === 'checking' && (
+                    <div className="animate-spin h-4 w-4 border-2 border-gray-300 border-t-blue-600 rounded-full"></div>
+                  )}
+                  {slugStatus === 'available' && (
+                    <Check className="h-4 w-4 text-green-500" />
+                  )}
+                  {slugStatus === 'taken' && (
+                    <X className="h-4 w-4 text-red-500" />
+                  )}
+                </div>
+              </div>
+              {slugStatus === 'taken' && (
+                <div className="text-red-500 text-sm -mt-2">This slug is already taken</div>
+              )}
+              {slugStatus === 'available' && (
+                <div className="text-green-500 text-sm -mt-2">This slug is available</div>
+              )}
               <div className="text-gray-600 -mt-4 text-xs">Your site will be live at https://livevview.vercel.app/preview/your-slug</div>
               <DialogFooter>
                 <Button type="submit" className="cursor-pointer bg-[#b719d3] hover:bg-[#c81ae6]" onClick={handleCreate}>Create</Button>
@@ -195,25 +285,37 @@ export default function Home() {
             <div key={project._id} className="flex flex-col gap-4 bg-white p-4 rounded-lg shadow-md">
               <div className="flex justify-between items-center">
                 <div className="text-xl font-semibold">{project.name}</div>
-                <a href={`/preview/${project.slug}`} target="_blank" rel="noopener noreferrer">
-                  <ExternalLink className="hover:bg-gray-100 p-1 rounded-md cursor-pointer" size={28} />
-                </a>
+                <ExternalLink 
+                  className="hover:bg-gray-100 p-1 rounded-md cursor-pointer" 
+                  size={28}
+                  onClick={() => openPreview(project.slug)}
+                />
               </div>
               <div className="bg-gray-200 rounded-md p-2 flex justify-between items-center">
-                <div>{`https://livevview.vercel.app/preview/${project.slug}`}</div>
+                <div>
+                  {`https://livevview.vercel.app/preview/${project.slug}`}
+                </div>
                 <Copy
-                  className="cursor-pointer"
+                  className="cursor-pointer ml-2"
                   size={18}
                   onClick={() => {
                     navigator.clipboard.writeText(`https://livevview.vercel.app/preview/${project.slug}`);
                     toast.success('Link copied to clipboard!');
                   }}
-                />            </div>
+                />
+              </div>
               <div className="flex justify-between items-center">
                 <a href={`/code/${project.slug}`} target="_blank">
                   <Button className="flex gap-2 items-center cursor-pointer" variant="outline">Edit <SquarePen /></Button>
                 </a>
-                <Button className="flex gap-2 items-center text-white cursor-pointer" variant="destructive" onClick={() => handleDelete(project._id)}>Delete <Trash /></Button>
+                <Button 
+                  className="flex gap-2 items-center text-white cursor-pointer" 
+                  variant="destructive" 
+                  onClick={() => handleDelete(project._id)}
+                  disabled={deletingProjectId === project._id}
+                >
+                  Delete <Trash />
+                </Button>
               </div>
             </div>
           ))) : (
