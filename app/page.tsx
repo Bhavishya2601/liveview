@@ -16,6 +16,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/Dialog"
 import { Input } from "@/components/ui/Input"
+import toast from 'react-hot-toast'
 
 export default function Home() {
   const { user } = useUser()
@@ -53,7 +54,11 @@ export default function Home() {
             throw new Error("Failed to fetch projects")
           }
           setProjects(data)
-        }).finally(()=>{
+        })
+        .catch(error => {
+          toast.error("Failed to fetch projects")
+        })
+        .finally(()=>{
           setLoadingProjects(false)
         })
     } else {
@@ -81,10 +86,14 @@ export default function Home() {
           userId: user?.id
         })
       })
+      
+      const data = await res.json();
       if (!res.ok) {
-        throw new Error("Failed to create project")
+        toast.error(data.error || "Failed to create project");
+        return;
       }
 
+      toast.success("Project created successfully!");
       setNewProject({
         projectName: '',
         projectSlug: '',
@@ -94,9 +103,32 @@ export default function Home() {
       })
       fetchProjects();
     } catch (err) {
-      console.log(err)
+      toast.error("Failed to create project");
     } finally {
       setDialogOpen(false);
+    }
+  }
+
+  const handleDelete = async (projectId: string) => {
+    try {
+      const res = await fetch("/api/projects/delete", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ projectId })
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error || "Failed to delete project");
+        return;
+      }
+
+      toast.success("Project deleted successfully!");
+      fetchProjects();
+    } catch (err) {
+      toast.error("Failed to delete project");
     }
   }
 
@@ -172,13 +204,16 @@ export default function Home() {
                 <Copy
                   className="cursor-pointer"
                   size={18}
-                  onClick={() => navigator.clipboard.writeText(`https://livevview.vercel.app/preview/${project.slug}`)}
+                  onClick={() => {
+                    navigator.clipboard.writeText(`https://livevview.vercel.app/preview/${project.slug}`);
+                    toast.success('Link copied to clipboard!');
+                  }}
                 />            </div>
               <div className="flex justify-between items-center">
                 <a href={`/code/${project.slug}`} target="_blank">
                   <Button className="flex gap-2 items-center cursor-pointer" variant="outline">Edit <SquarePen /></Button>
                 </a>
-                <Button className="flex gap-2 items-center text-white cursor-pointer" variant="destructive">Delete <Trash /></Button>
+                <Button className="flex gap-2 items-center text-white cursor-pointer" variant="destructive" onClick={() => handleDelete(project._id)}>Delete <Trash /></Button>
               </div>
             </div>
           ))) : (

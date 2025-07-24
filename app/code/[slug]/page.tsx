@@ -8,6 +8,7 @@ import HtmlEditor from '@/components/HtmlEditor';
 import JavaScriptEditor from '@/components/JavaScriptEditor';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/Resizable';
 import {useUser} from '@clerk/nextjs';
+import toast from 'react-hot-toast';
 
 export default function Home() {
   const {user} = useUser()
@@ -16,6 +17,7 @@ export default function Home() {
   const [htmlCode, setHtmlCode] = useState('');
   const [cssCode, setCssCode] = useState('');
   const [jsCode, setJsCode] = useState('');
+  const [projectId, setProjectId] = useState('');
 
   useEffect(()=>{
     if (user?.id) {
@@ -37,17 +39,23 @@ export default function Home() {
           setHtmlCode(data.htmlCode)
           setCssCode(data.cssCode)
           setJsCode(data.jsCode)
+          setProjectId(data._id)
         })
+        .catch(error => {
+          toast.error(error.message);
+        });
     }
   }, [user?.id, slug])
 
   return (
     <div>
       <Header 
-      htmlCode={htmlCode}
+        htmlCode={htmlCode}
         cssCode={cssCode}
         jsCode={jsCode}
-        />
+        slug={slug as string}
+        projectId={projectId}
+      />
       <ResizablePanelGroup direction="vertical" className="min-h-[calc(100vh-4rem)] min-w-full">
         <ResizablePanel defaultSize={65} minSize={30}>
           <ResizablePanelGroup direction="horizontal" className="min-h-full">

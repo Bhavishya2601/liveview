@@ -23,8 +23,8 @@ export async function POST(request: Request) {
 
         return NextResponse.json({ message: 'Project created successfully', project: newProject }, { status: 201 })
 
-    } catch (err) {
+    } catch (err: any) {
         console.log(err)
-        return NextResponse.json({ error: 'Failed to save code' }, { status: 500 });
+        return NextResponse.json({ error: 'Something went wrong' }, { status: 500 });
     }
 }

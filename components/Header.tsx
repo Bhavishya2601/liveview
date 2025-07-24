@@ -2,27 +2,40 @@ import { SignedIn, UserButton } from '@clerk/nextjs';
 import { Button } from './ui/Button';
 import { ExternalLink, Save } from 'lucide-react';
 import Image from 'next/image';
+import toast from 'react-hot-toast';
 
 interface HeaderProps {
   htmlCode: string;
   cssCode: string;
   jsCode: string;
+  slug: string;
+  projectId: string;
 }
 
-export default function Header({ htmlCode, cssCode, jsCode }: HeaderProps) {
+export default function Header({ htmlCode, cssCode, jsCode, slug, projectId }: HeaderProps) {
+
+  const saveProject = async () => {
+    try {
+      const res = await fetch('/api/projects/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slug, htmlCode, cssCode, jsCode }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        toast.success('Project saved successfully!');
+      } else {
+        toast.error(data.error || 'Failed to save project');
+      }
+    } catch (error) {
+      toast.error('Failed to save project');
+    }
+  };
 
   const OpenNewTab = async () => {
-    const res = await fetch('/api/save', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ htmlCode, cssCode, jsCode }),
-    });
-
-    const data = await res.json();
-    if (res.ok) {
-      const previewLink = `/preview/${data._id}`;
-      window.open(previewLink, '_blank');
-    }
+    const previewLink = `/preview/${projectId}`;
+    window.open(previewLink, '_blank');
   };
 
   return (
@@ -33,7 +46,7 @@ export default function Header({ htmlCode, cssCode, jsCode }: HeaderProps) {
       </div>
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2">
-          <Button className='cursor-pointer'>
+          <Button className='cursor-pointer' onClick={saveProject}>
             Save
             <Save />
           </Button>
