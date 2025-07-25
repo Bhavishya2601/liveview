@@ -4,6 +4,7 @@ import { ExternalLink, Save } from 'lucide-react';
 import Image from 'next/image';
 import toast from 'react-hot-toast';
 import { useLoading } from '@/contexts/LoadingContext';
+import { useState, useEffect } from 'react';
 
 interface HeaderProps {
   htmlCode: string;
@@ -15,6 +16,17 @@ interface HeaderProps {
 
 export default function Header({ htmlCode, cssCode, jsCode, slug, projectId }: HeaderProps) {
   const { setLoading } = useLoading();
+  const [projectName, setProjectName] = useState<string>('');
+
+  useEffect(() => {
+    if (slug) {
+      const formattedName = slug
+        .split('-')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+      setProjectName(formattedName);
+    }
+  }, [slug]);
 
   const saveProject = async () => {
     try {
@@ -40,15 +52,21 @@ export default function Header({ htmlCode, cssCode, jsCode, slug, projectId }: H
   };
 
   const OpenNewTab = async () => {
-    const previewLink = `/preview/${projectId}`;
+    const previewLink = `/preview/${slug}`;
     window.open(previewLink, '_blank');
   };
 
   return (
-    <div className="flex justify-between items-center p-4 h-16 bg-slate-950 text-white">
-      <div className="flex items-center gap-4">
-        <Image src={'/logo.png'} alt="Logo" width={50} height={30} />
+    <div className="flex justify-between items-center p-4 px-10 h-16 bg-slate-950 text-white">
+      <div className="flex items-center gap-3">
+        <Image src={'/logo.svg'} alt="Logo" width={30} height={30} />
         <div className="text-2xl tracking-wide font-semibold">LiveView</div>
+        {projectName && (
+          <div className='flex items-center gap-3'>
+            <div className="text-gray-400 text-xl leading-none">|</div>
+            <div className="text-lg text-gray-300 font-medium leading-none flex items-center">{projectName}</div>
+          </div>
+        )}
       </div>
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2">

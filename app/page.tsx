@@ -93,11 +93,11 @@ export default function Home() {
   }
 
   return (
-    <div className="bg-[#F8FAFC] min-h-screen">
+    <div className="bg-[#021526] text-white min-h-screen">
       <DashboardHeader onProjectCreated={refreshProjects} />
       
-      <div className="flex gap-3 items-center text-3xl px-10 py-4 font-semibold">
-        Your Sites
+      <div className="flex gap-3 items-center text-3xl px-10 pt-8 font-semibold">
+        Your Live Sites
       </div>
 
       <ProjectsGrid 

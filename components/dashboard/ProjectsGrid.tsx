@@ -9,20 +9,20 @@ interface ProjectsGridProps {
   deletingProjectId: string | null
 }
 
-export default function ProjectsGrid({ 
-  projects, 
-  loadingProjects, 
-  onDelete, 
-  deletingProjectId 
+export default function ProjectsGrid({
+  projects,
+  loadingProjects,
+  onDelete,
+  deletingProjectId
 }: ProjectsGridProps) {
   if (loadingProjects && projects.length === 0) {
     return (
       <div className="grid grid-cols-3 gap-3 p-4 px-10">
         {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="animate-pulse flex flex-col gap-4 bg-white p-4 rounded-lg shadow-md h-40">
-            <div className="h-6 bg-gray-300 rounded w-1/2 mb-2"></div>
-            <div className="h-8 bg-gray-300 rounded w-full mb-2"></div>
-            <div className="h-4 bg-gray-300 rounded w-1/3"></div>
+          <div key={i} className="animate-pulse flex flex-col gap-4 bg-slate-700 p-4 rounded-lg shadow-md h-40">
+            <div className="h-6 bg-slate-600 rounded w-1/2 mb-2"></div>
+            <div className="h-8 bg-slate-600 rounded w-full mb-2"></div>
+            <div className="h-4 bg-slate-600 rounded w-1/3"></div>
           </div>
         ))}
       </div>

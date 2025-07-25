@@ -129,7 +129,7 @@ export default function CreateProjectDialog({ onProjectCreated }: CreateProjectD
   return (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
       <DialogTrigger asChild>
-        <Button className='cursor-pointer bg-[#b719d3] hover:bg-[#c81ae6]'>
+        <Button className='cursor-pointer bg-[#1e293b] hover:bg-[#1e293bdf]'>
           <Plus />
           Create new
         </Button>

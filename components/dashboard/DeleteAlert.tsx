@@ -30,7 +30,7 @@ const DeleteAlert = ({ onDelete, isDeleting = false, projectName }: DeleteAlertP
           Delete <Trash />
         </Button>
       </AlertDialogTrigger>
-      <AlertDialogContent>
+      <AlertDialogContent className="bg-[#021526] text-white border-none">
         <AlertDialogHeader>
           <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
           <AlertDialogDescription>
@@ -38,7 +38,7 @@ const DeleteAlert = ({ onDelete, isDeleting = false, projectName }: DeleteAlertP
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogCancel className="bg-transparent hover:bg-[#062033] hover:text-white">Cancel</AlertDialogCancel>
           <AlertDialogAction 
             onClick={onDelete}
             className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
