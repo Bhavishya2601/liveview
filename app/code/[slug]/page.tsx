@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Header from '@/components/Header';
 import CssEditor from '@/components/CssEditor';
 import HtmlEditor from '@/components/HtmlEditor';
@@ -12,6 +12,7 @@ import toast from 'react-hot-toast';
 
 export default function Home() {
   const {user} = useUser()
+  const router = useRouter()
   const params = useParams();
   const slug = params.slug
   const [htmlCode, setHtmlCode] = useState('');
@@ -34,7 +35,14 @@ export default function Home() {
         .then(res => res.json())
         .then(data => {
           if (data.error) {
-            throw new Error("Failed to fetch projects")
+            toast.error("You do not have access to this project or it does not exist", {
+              style: {
+                maxWidth: '600px',
+                whiteSpace: 'nowrap',
+              },
+            });
+            router.push('/');
+            return;
           }
           setHtmlCode(data.htmlCode)
           setCssCode(data.cssCode)
@@ -43,6 +51,7 @@ export default function Home() {
         })
         .catch(error => {
           toast.error(error.message);
+          router.push('/');
         });
     }
   }, [user?.id, slug])
